@@ -1,0 +1,2528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIZEBOOK - Smart Reading Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.4.2/mammoth.browser.min.js"></script>
+    <style>
+        :root {
+            --primary-bg: #F8FAFC;
+            --secondary-bg: #FFFFFF;
+            --accent-color: #3B82F6;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --border-color: #E5E7EB;
+            --hover-bg: #F3F4F6;
+            --sidebar-bg: #F9FAFB;
+            --darker-blue: #2563EB;
+        }
+
+        [data-theme="dark"] {
+            --primary-bg: #0F172A;
+            --secondary-bg: #1E293B;
+            --accent-color: #60A5FA;
+            --text-primary: #F1F5F9;
+            --text-secondary: #CBD5E1;
+            --border-color: #334155;
+            --hover-bg: #334155;
+            --sidebar-bg: #1E293B;
+            --darker-blue: #93C5FD;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .card {
+            background-color: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-sidebar {
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            width: 80px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem 0;
+        }
+
+        .nav-icon {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0.75rem 0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            color: var(--text-secondary);
+        }
+
+        .nav-icon:hover {
+            background-color: var(--hover-bg);
+            color: var(--accent-color);
+        }
+
+        .nav-icon.active {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .nav-divider {
+            width: 60%;
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 1.25rem 0;
+        }
+
+        .top-controls {
+            background-color: var(--secondary-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            margin-left: 80px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .controls-section {
+            display: flex;
+            align-items: center;
+            gap: 1.75rem;
+        }
+
+        .theme-toggle {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background-color: var(--hover-bg);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-primary);
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .mini-select {
+            background-color: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.4rem 0.6rem;
+            font-size: 0.8rem;
+            color: var(--text-primary);
+            min-width: 50px;
+            max-width: 70px;
+        }
+
+        .main-content {
+            margin-left: 80px;
+            margin-right: 320px;
+            padding: 1.5rem;
+        }
+
+        .right-panel {
+            background-color: var(--sidebar-bg);
+            border-left: 1px solid var(--border-color);
+            width: 320px;
+            position: fixed;
+            right: 0;
+            top: 0;
+            z-index: 30;
+            padding: 1.25rem;
+            padding-top: 30px;
+        }
+
+        .chapter-item {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            padding: 0.75rem;
+            margin: 0.25rem 0;
+            border-radius: 8px;
+        }
+
+        .chapter-item:hover {
+            background-color: var(--hover-bg);
+        }
+
+        .chapter-item.active {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .upload-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 3rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--accent-color);
+            background-color: var(--hover-bg);
+        }
+
+        .upload-zone.dragover {
+            border-color: var(--accent-color);
+            background-color: var(--hover-bg);
+        }
+
+        .note-item {
+            background-color: var(--hover-bg);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin: 0.5rem 0;
+            border-left: 3px solid var(--accent-color);
+        }
+
+        .reading-content {
+            font-size: 1.125rem;
+            line-height: 1.8;
+            max-width: none;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--darker-blue);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--hover-bg);
+        }
+
+        .recording-indicator {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .library-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .book-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .book-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .summary-point {
+            background-color: var(--hover-bg);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 0.5rem 0;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .audio-note-card {
+            background-color: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 1rem 0;
+            transition: all 0.3s ease;
+        }
+
+        .audio-note-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .analysis-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--secondary-bg);
+            color: var(--text-primary);
+            resize: vertical;
+        }
+
+        .voice-prompt {
+            background: linear-gradient(135deg, var(--accent-color), #8B5CF6);
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            text-align: center;
+            font-style: italic;
+        }
+
+        .pdf-page {
+            max-width: 100%;
+            margin: 1rem auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .document-content {
+            background-color: var(--secondary-bg);
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin: 1rem 0;
+            min-height: 400px;
+        }
+
+        .document-content h1, .document-content h2, .document-content h3 {
+            color: var(--text-primary);
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        .document-content p {
+            margin: 1rem 0;
+            text-align: justify;
+        }
+
+        .document-content ul, .document-content ol {
+            margin: 1rem 0;
+            padding-left: 2rem;
+        }
+
+        .processing-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .spinner {
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--accent-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin-right: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .pdf-viewer {
+            width: 100%;
+            min-height: 600px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .pdf-viewer canvas {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+        }
+
+        .copyright-footer {
+            background-color: var(--secondary-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 1rem;
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .copyright-footer a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .copyright-footer a:hover {
+            text-decoration: underline;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--border-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 3px;
+        }
+
+        .document-title-input {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--accent-color);
+            padding: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text-primary);
+            width: 100%;
+            margin-bottom: 1rem;
+            outline: none;
+        }
+
+        .page-controls-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .page-indicator {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .add-document-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--accent-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 20;
+            transition: all 0.3s ease;
+        }
+
+        .add-document-btn:hover {
+            background-color: var(--darker-blue);
+            transform: scale(1.05);
+        }
+
+        .record-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 8rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #EF4444;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 20;
+            transition: all 0.3s ease;
+        }
+
+        .record-btn:hover {
+            background-color: #DC2626;
+            transform: scale(1.05);
+        }
+
+        .record-btn.recording {
+            animation: pulse 2s infinite;
+        }
+
+        .saved-notes-section {
+            margin-top: 2rem;
+        }
+
+        .note-card {
+            background-color: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .note-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .search-result {
+            background-color: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .search-result h4 {
+            margin-top: 0;
+            color: var(--accent-color);
+        }
+
+        .search-source {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        .tts-controls {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background-color: var(--hover-bg);
+            border-radius: 8px;
+        }
+
+        .tts-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        .tts-btn.play {
+            background-color: #10B981;
+            color: white;
+        }
+
+        .tts-btn.pause {
+            background-color: #F59E0B;
+            color: white;
+        }
+
+        .tts-btn.stop {
+            background-color: #EF4444;
+            color: white;
+        }
+
+        .tts-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 1024px) {
+            .nav-sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .nav-sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .right-panel {
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .right-panel.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                margin-right: 0;
+                padding: 1.25rem 1rem 1rem;
+            }
+            
+            .top-controls {
+                margin-left: 0;
+                padding: 0.75rem;
+            }
+
+            .library-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+
+            .card {
+                padding: 1rem;
+            }
+
+            .nav-icon {
+                width: 40px;
+                height: 40px;
+            }
+
+            .btn-primary, .btn-secondary {
+                padding: 0.5rem 1rem;
+                font-size: 0.875rem;
+            }
+
+            .mini-select {
+                padding: 0.3rem 0.5rem;
+                font-size: 0.75rem;
+                min-width: 45px;
+                max-width: 60px;
+            }
+
+            .controls-section {
+                gap: 0.75rem;
+            }
+
+            .theme-toggle {
+                width: 28px;
+                height: 28px;
+            }
+
+            .add-document-btn {
+                bottom: 1.5rem;
+                right: 1.5rem;
+                width: 50px;
+                height: 50px;
+            }
+
+            .record-btn {
+                bottom: 1.5rem;
+                right: 6rem;
+                width: 50px;
+                height: 50px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .library-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .upload-zone {
+                padding: 2rem;
+            }
+
+            .right-panel {
+                width: 100%;
+                height: auto;
+                position: fixed;
+                top: auto;
+                bottom: 0;
+                transform: translateY(100%);
+            }
+
+            .right-panel.open {
+                transform: translateY(0);
+            }
+
+            .nav-icon {
+                width: 35px;
+                height: 35px;
+            }
+
+            .btn-primary, .btn-secondary {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+
+            .add-document-btn {
+                bottom: 1rem;
+                right: 1rem;
+                width: 45px;
+                height: 45px;
+            }
+
+            .record-btn {
+                bottom: 1rem;
+                right: 4rem;
+                width: 45px;
+                height: 45px;
+            }
+
+            .tts-controls {
+                flex-wrap: wrap;
+                gap: 0.25rem;
+            }
+
+            .tts-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.75rem;
+            }
+        }
+
+        @media print {
+            .nav-sidebar, .right-panel, .top-controls, .copyright-footer, .add-document-btn, .record-btn {
+                display: none !important;
+            }
+            
+            .main-content {
+                margin: 0 !important;
+                padding: 1rem !important;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+            
+            .section {
+                display: block !important;
+            }
+            
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            
+            .card {
+                box-shadow: none !important;
+                border: 1px solid #ccc !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Left Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-icon active" onclick="showSection('home')" title="Home">
+            <i class="fas fa-home text-lg"></i>
+        </div>
+        <div class="nav-divider"></div>
+        <div class="nav-icon" onclick="showSection('library')" title="Books">
+            <i class="fas fa-book text-lg"></i>
+        </div>
+        <div class="nav-divider"></div>
+        <div class="nav-icon" onclick="showSection('saved-notes')" title="Saved Notes">
+            <i class="fas fa-save text-lg"></i>
+        </div>
+        <div class="nav-divider"></div>
+        <div class="nav-icon" onclick="showSection('audio-library')" title="Audio Notes">
+            <i class="fas fa-headphones text-lg"></i>
+        </div>
+        <div class="nav-divider"></div>
+        <div class="nav-icon" onclick="showSection('analysis')" title="Analysis">
+            <i class="fas fa-chart-line text-lg"></i>
+        </div>
+    </div>
+
+    <!-- Top Controls Bar -->
+    <div class="top-controls">
+        <div class="logo-section">
+            <i class="fas fa-book-open text-2xl" style="color: var(--accent-color);"></i>
+            <h1 class="text-xl font-bold">NIZEBOOK</h1>
+        </div>
+        <div class="controls-section">
+            <select id="languageSelector" class="mini-select">
+                <option value="en">EN</option>
+                <option value="yo">YO</option>
+                <option value="ig">IG</option>
+                <option value="ha">HA</option>
+                <option value="fr">FR</option>
+                <option value="es">ES</option>
+                <option value="ar">AR</option>
+                <option value="sw">SW</option>
+                <option value="pt">PT</option>
+                <option value="de">DE</option>
+                <option value="it">IT</option>
+                <option value="ru">RU</option>
+                <option value="zh">ZH</option>
+                <option value="ja">JA</option>
+                <option value="hi">HI</option>
+            </select>
+            <select id="voiceSelector" class="mini-select">
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="child">Child</option>
+                <option value="teen">Teen</option>
+                <option value="teen-male">Teen M</option>
+                <option value="teen-female">Teen F</option>
+            </select>
+            <div class="theme-toggle no-print" onclick="toggleTheme()" id="themeToggle">
+                <i class="fas fa-sun"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Home Section -->
+        <div id="home" class="section active">
+            <div class="max-w-6xl mx-auto pt-10">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold mb-4">Welcome to NIZEBOOK</h2>
+                    <p class="text-xl text-gray-600 mb-8">Your intelligent reading companion with voice notes and AI analysis</p>
+                </div>
+
+                <div class="upload-zone" onclick="document.getElementById('fileInput').click()" ondrop="handleFileDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                    <i class="fas fa-cloud-upload-alt text-6xl mb-4" style="color: var(--accent-color);"></i>
+                    <h3 class="text-2xl font-semibold mb-2">Upload Your First Document</h3>
+                    <p class="text-gray-600 mb-4">Drag and drop your PDF, DOCX, or TXT file here</p>
+                    <button class="btn-primary">
+                        <i class="fas fa-plus mr-2"></i>Choose File
+                    </button>
+                    <input type="file" id="fileInput" class="hidden" accept=".pdf,.docx,.txt,.doc" onchange="handleFileUpload(event)">
+                </div>
+
+                <!-- Document Viewer -->
+                <div id="documentViewer" class="card p-6 mt-8" style="display: none;">
+                    <input type="text" id="documentTitleInput" class="document-title-input" placeholder="Enter document title">
+                    <div id="viewer" class="document-content">
+                        <p>Uploaded document will appear here...</p>
+                    </div>
+                </div>
+
+                <div class="card p-6 mt-12">
+                    <h3 class="text-2xl font-semibold mb-4">About NIZEBOOK</h3>
+                    <p class="text-gray-600">NIZEBOOK supports proper PDF and DOC file rendering with full content display. Upload documents and see them rendered beautifully with automatic chapter detection, voice notes, and AI-powered analysis. With support for multiple languages and intuitive navigation, NIZEBOOK makes reading and studying seamless and engaging.</p>
+                </div>
+
+                <div class="grid md:grid-cols-4 gap-8 mt-12">
+                    <div class="card p-6 text-center">
+                        <i class="fas fa-file-pdf text-4xl mb-4" style="color: var(--accent-color);"></i>
+                        <h3 class="text-lg font-semibold mb-2">PDF Support</h3>
+                        <p class="text-gray-600">Full PDF rendering with proper content display</p>
+                    </div>
+                    <div class="card p-6 text-center">
+                        <i class="fas fa-file-word text-4xl mb-4" style="color: var(--accent-color);"></i>
+                        <h3 class="text-lg font-semibold mb-2">DOC/DOCX Files</h3>
+                        <p class="text-gray-600">Complete Microsoft Word document support</p>
+                    </div>
+                    <div class="card p-6 text-center">
+                        <i class="fas fa-microphone text-4xl mb-4" style="color: var(--accent-color);"></i>
+                        <h3 class="text-lg font-semibold mb-2">Voice Notes</h3>
+                        <p class="text-gray-600">Record audio notes with automatic saving</p>
+                    </div>
+                    <div class="card p-6 text-center">
+                        <i class="fas fa-brain text-4xl mb-4" style="color: var(--accent-color);"></i>
+                        <h3 class="text-lg font-semibold mb-2">AI Analysis</h3>
+                        <p class="text-gray-600">Get detailed explanations and examples</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reading Section -->
+        <div id="reading" class="section">
+            <div class="max-w-5xl mx-auto">
+                <div class="flex justify-between items-center mb-6 no-print">
+                    <button onclick="showSection('library')" class="btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Library
+                    </button>
+                    <div class="flex items-center space-x-4">
+                        <span id="readingProgress" class="text-sm text-gray-600">Page 1 of 1</span>
+                        <div class="w-32 h-2 bg-gray-200 rounded-full">
+                            <div id="progressBar" class="h-2 bg-blue-500 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Text-to-Speech Controls -->
+                <div class="tts-controls no-print">
+                    <button id="playTTSBtn" class="tts-btn play" onclick="startTextToSpeech()">
+                        <i class="fas fa-play mr-1"></i>Read Aloud
+                    </button>
+                    <button id="pauseTTSBtn" class="tts-btn pause" onclick="pauseTextToSpeech()" disabled>
+                        <i class="fas fa-pause mr-1"></i>Pause
+                    </button>
+                    <button id="stopTTSBtn" class="tts-btn stop" onclick="stopTextToSpeech()" disabled>
+                        <i class="fas fa-stop mr-1"></i>Stop
+                    </button>
+                    <span class="text-sm text-gray-600 ml-4">Language: <span id="currentTTSLang">EN</span></span>
+                </div>
+                
+                <div class="card p-8">
+                    <h1 id="currentBookTitle" class="text-3xl font-bold mb-2">Book Title</h1>
+                    <h2 id="currentChapterTitle" class="text-xl text-gray-600 mb-6">Chapter Title</h2>
+                    
+                    <div class="voice-prompt no-print" id="voicePrompt" style="display: none;">
+                        <i class="fas fa-microphone mr-2"></i>
+                        "Some things are best understood with your own voice, so add your voice to remember what this chapter really means"
+                    </div>
+                    
+                    <div id="readingContent" class="reading-content">
+                        <p>Content will appear here...</p>
+                    </div>
+                    
+                    <div class="page-controls-bottom no-print">
+                        <div class="page-indicator" id="bottomPageIndicator">Page 1 of 1</div>
+                        <div class="flex space-x-2">
+                            <button onclick="speakCurrentPage()" class="btn-secondary">
+                                <i class="fas fa-volume-up mr-2"></i>Listen
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center mt-6 no-print">
+                    <button onclick="previousPage()" id="prevBtn" class="btn-secondary">
+                        <i class="fas fa-chevron-left mr-2"></i>Previous
+                    </button>
+                    <button onclick="nextPage()" id="nextBtn" class="btn-primary">
+                        Next<i class="fas fa-chevron-right ml-2"></i>
+                    </button>
+                </div>
+
+                <!-- Chapter List -->
+                <div class="card p-6 mt-6" id="chaptersList" style="display: none;">
+                    <h3 class="text-lg font-semibold mb-4">Chapters</h3>
+                    <div id="chaptersContent"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Library Section -->
+        <div id="library" class="section">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold">My Library</h2>
+                <button onclick="document.getElementById('fileInput').click()" class="btn-primary no-print">
+                    <i class="fas fa-plus mr-2"></i>Add Book
+                </button>
+            </div>
+            
+            <div id="libraryGrid" class="library-grid">
+                <div class="text-center py-12 col-span-full">
+                    <i class="fas fa-book text-6xl text-gray-400 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">No books yet</h3>
+                    <p class="text-gray-500">Upload your first document to get started</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Saved Notes Section -->
+        <div id="saved-notes" class="section">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold">Saved Notes</h2>
+                <span id="notesCount" class="text-sm text-gray-500">0 notes</span>
+            </div>
+            
+            <div id="savedNotesList" class="space-y-4">
+                <div class="text-center py-12">
+                    <i class="fas fa-sticky-note text-6xl text-gray-400 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">No saved notes yet</h3>
+                    <p class="text-gray-500">Start reading and add notes to your documents</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audio Library Section -->
+        <div id="audio-library" class="section">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold">Audio Notes</h2>
+                <span id="audioCount" class="text-sm text-gray-500">0 recordings</span>
+            </div>
+            
+            <div id="audioNotesGrid" class="space-y-4">
+                <div class="text-center py-12">
+                    <i class="fas fa-microphone text-6xl text-gray-400 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">No audio notes yet</h3>
+                    <p class="text-gray-500">Start reading and record your thoughts</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis Section -->
+        <div id="analysis" class="section">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold">AI Document Analysis</h2>
+                <button onclick="document.getElementById('analysisFileInput').click()" class="btn-primary no-print">
+                    <i class="fas fa-upload mr-2"></i>Analyze Document
+                </button>
+                <input type="file" id="analysisFileInput" class="hidden" accept=".pdf,.docx,.txt,.doc" onchange="analyzeDocument(event)">
+            </div>
+
+            <div class="card p-6 mb-6">
+                <h3 class="text-xl font-semibold mb-4">Need Help Understanding Something?</h3>
+                <p class="text-gray-600 mb-4">Paste any text, paragraph, or concept you'd like explained with examples:</p>
+                <textarea 
+                    id="customAnalysisInput" 
+                    class="analysis-textarea" 
+                    placeholder="Paste your text here or describe what you need explained..."
+                ></textarea>
+                <div class="flex justify-between items-center mt-4">
+                    <div class="flex space-x-2">
+                        <button onclick="explainText()" class="btn-primary">
+                            <i class="fas fa-brain mr-2"></i>Explain with Examples
+                        </button>
+                        <button onclick="searchWebExamples()" class="btn-secondary">
+                            <i class="fas fa-search mr-2"></i>Find Web Examples
+                        </button>
+                    </div>
+                    <button onclick="clearAnalysisInput()" class="btn-secondary">
+                        <i class="fas fa-trash mr-2"></i>Clear
+                    </button>
+                </div>
+            </div>
+            
+            <div id="analysisResults" class="space-y-6">
+                <div class="text-center py-12">
+                    <i class="fas fa-chart-line text-6xl text-gray-400 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">No analysis yet</h3>
+                    <p class="text-gray-500">Upload a document or paste text to see AI-powered insights</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Panel - Dictionary & Notes -->
+    <div class="right-panel" id="rightPanel">
+        <h3 class="text-lg font-semibold mb-4">Dictionary & Notes</h3>
+        
+        <!-- Dictionary Search -->
+        <div class="mb-6">
+            <div class="flex space-x-2 mb-4">
+                <input type="text" id="dictionaryInput" placeholder="Search any word..." class="flex-1 p-3 border border-gray-300 rounded-lg text-sm">
+                <button onclick="searchDictionary()" class="btn-primary px-3">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+            <div id="dictionaryResults" class="min-h-32 p-4 bg-gray-50 rounded-lg text-sm">
+                <p class="text-gray-500 text-center">Search for a word to see its definition</p>
+            </div>
+        </div>
+
+        <!-- Quick Notes -->
+        <div class="mb-6">
+            <h4 class="font-semibold mb-2">Quick Note</h4>
+            <textarea id="quickNoteInput" placeholder="Write a quick note..." class="w-full p-3 border border-gray-300 rounded-lg h-20 text-sm"></textarea>
+            <button onclick="saveQuickNote()" class="btn-primary w-full mt-2 text-sm">
+                <i class="fas fa-save mr-2"></i>Save Note
+            </button>
+        </div>
+
+        <!-- Notes List -->
+        <div>
+            <h4 class="font-semibold mb-4">Your Notes</h4>
+            <div id="notesList" class="space-y-2 max-h-64 overflow-y-auto">
+                <div class="text-center text-gray-500 py-4">
+                    <i class="fas fa-sticky-note text-2xl mb-2"></i>
+                    <p class="text-sm">No notes yet</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fixed Action Buttons -->
+    <div class="add-document-btn no-print" onclick="document.getElementById('fileInput').click()" title="Add Document">
+        <i class="fas fa-plus text-xl"></i>
+    </div>
+
+    <div class="record-btn no-print" onclick="toggleRecording()" id="recordBtn" title="Record Audio Note">
+        <i class="fas fa-microphone text-xl"></i>
+    </div>
+
+    <!-- Copyright Footer -->
+    <div class="copyright-footer">
+        <p>&copy; 2024 NIZEBOOK. Developed by <a href="https://www.linkedin.com/in/jasmine-daniel-developer-82aa14248" target="_blank">Jasmine Daniel</a></p>
+    </div>
+
+    <script>
+        // Configure PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.worker.min.js';
+
+        // Global variables
+        let currentBooks = JSON.parse(localStorage.getItem('nizebook_books')) || [];
+        let currentNotes = JSON.parse(localStorage.getItem('nizebook_notes')) || [];
+        let currentAudioNotes = JSON.parse(localStorage.getItem('nizebook_audio_notes')) || [];
+        let currentBook = null;
+        let currentChapter = 0;
+        let currentPage = 0;
+        let isRecording = false;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let currentUtterance = null;
+        let isSpeaking = false;
+        let speechPaused = false;
+
+        // Language configurations for TTS
+        const languageConfig = {
+            'en': { lang: 'en-US', name: 'English' },
+            'yo': { lang: 'yo-NG', name: 'Yoruba', fallback: 'en-US' },
+            'ig': { lang: 'ig-NG', name: 'Igbo', fallback: 'en-US' },
+            'ha': { lang: 'ha-NG', name: 'Hausa', fallback: 'en-US' },
+            'fr': { lang: 'fr-FR', name: 'French' },
+            'es': { lang: 'es-ES', name: 'Spanish' },
+            'ar': { lang: 'ar-SA', name: 'Arabic' },
+            'sw': { lang: 'sw-KE', name: 'Swahili', fallback: 'en-US' },
+            'pt': { lang: 'pt-PT', name: 'Portuguese' },
+            'de': { lang: 'de-DE', name: 'German' },
+            'it': { lang: 'it-IT', name: 'Italian' },
+            'ru': { lang: 'ru-RU', name: 'Russian' },
+            'zh': { lang: 'zh-CN', name: 'Chinese' },
+            'ja': { lang: 'ja-JP', name: 'Japanese' },
+            'hi': { lang: 'hi-IN', name: 'Hindi' }
+        };
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTheme();
+            displayLibrary();
+            displayNotes();
+            displayAudioNotes();
+            updateLanguage();
+            displaySavedNotes();
+            initializeTTSControls();
+
+            // Add mobile menu button for smaller screens
+            if (window.innerWidth <= 1024) {
+                addMobileMenuButton();
+            }
+        });
+
+        // Initialize TTS Controls
+        function initializeTTSControls() {
+            updateTTSLanguageDisplay();
+            document.getElementById('languageSelector').addEventListener('change', updateTTSLanguageDisplay);
+        }
+
+        function updateTTSLanguageDisplay() {
+            const selectedLang = document.getElementById('languageSelector').value;
+            const langConfig = languageConfig[selectedLang];
+            document.getElementById('currentTTSLang').textContent = langConfig.name;
+        }
+
+        // Text-to-Speech Functions
+        function startTextToSpeech() {
+            if (!currentBook || !currentBook.chapters || currentBook.chapters.length === 0) {
+                showToast('No content to read', 'warning');
+                return;
+            }
+
+            const chapter = currentBook.chapters[currentChapter];
+            if (!chapter || !chapter.pages || chapter.pages.length === 0) {
+                showToast('No content available for this chapter', 'warning');
+                return;
+            }
+
+            const text = chapter.pages[currentPage] || '';
+            if (!text.trim()) {
+                showToast('No text content on this page', 'warning');
+                return;
+            }
+
+            // Stop any current speech
+            if (isSpeaking) {
+                stopTextToSpeech();
+            }
+
+            // Clean text for better speech
+            const cleanText = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+            
+            if ('speechSynthesis' in window) {
+                currentUtterance = new SpeechSynthesisUtterance(cleanText);
+                
+                // Configure voice based on selections
+                const selectedLang = document.getElementById('languageSelector').value;
+                const voiceType = document.getElementById('voiceSelector').value;
+                const langConfig = languageConfig[selectedLang];
+                
+                // Set language
+                currentUtterance.lang = langConfig.lang;
+                
+                // Configure voice characteristics
+                switch(voiceType) {
+                    case 'male':
+                        currentUtterance.pitch = 0.8;
+                        currentUtterance.rate = 0.9;
+                        break;
+                    case 'female':
+                        currentUtterance.pitch = 1.2;
+                        currentUtterance.rate = 0.95;
+                        break;
+                    case 'child':
+                        currentUtterance.pitch = 1.5;
+                        currentUtterance.rate = 1.2;
+                        break;
+                    case 'teen':
+                        currentUtterance.pitch = 1.2;
+                        currentUtterance.rate = 1.1;
+                        break;
+                    case 'teen-male':
+                        currentUtterance.pitch = 0.9;
+                        currentUtterance.rate = 1.0;
+                        break;
+                    case 'teen-female':
+                        currentUtterance.pitch = 1.1;
+                        currentUtterance.rate = 1.0;
+                        break;
+                    default:
+                        currentUtterance.pitch = 1.0;
+                        currentUtterance.rate = 1.0;
+                }
+
+                // Try to find a voice that matches the language
+                const voices = speechSynthesis.getVoices();
+                const preferredVoice = voices.find(voice => 
+                    voice.lang.startsWith(selectedLang) || 
+                    voice.lang.toLowerCase().includes(selectedLang) ||
+                    voice.lang === langConfig.lang
+                );
+                
+                if (preferredVoice) {
+                    currentUtterance.voice = preferredVoice;
+                } else if (langConfig.fallback) {
+                    const fallbackVoice = voices.find(voice => voice.lang === langConfig.fallback);
+                    if (fallbackVoice) {
+                        currentUtterance.voice = fallbackVoice;
+                        currentUtterance.lang = langConfig.fallback;
+                    }
+                }
+
+                // Event handlers
+                currentUtterance.onstart = function() {
+                    isSpeaking = true;
+                    speechPaused = false;
+                    updateTTSButtons();
+                    showToast(`Reading aloud in ${langConfig.name}...`, 'info');
+                };
+
+                currentUtterance.onend = function() {
+                    isSpeaking = false;
+                    speechPaused = false;
+                    updateTTSButtons();
+                };
+
+                currentUtterance.onerror = function(event) {
+                    console.error('Speech synthesis error:', event.error);
+                    isSpeaking = false;
+                    speechPaused = false;
+                    updateTTSButtons();
+                    showToast('Error reading text aloud', 'error');
+                };
+
+                // Start speech
+                speechSynthesis.speak(currentUtterance);
+            } else {
+                showToast('Text-to-speech not supported in your browser', 'error');
+            }
+        }
+
+        function pauseTextToSpeech() {
+            if (isSpeaking && !speechPaused) {
+                speechSynthesis.pause();
+                speechPaused = true;
+                updateTTSButtons();
+                showToast('Speech paused', 'info');
+            } else if (speechPaused) {
+                speechSynthesis.resume();
+                speechPaused = false;
+                updateTTSButtons();
+                showToast('Speech resumed', 'info');
+            }
+        }
+
+        function stopTextToSpeech() {
+            speechSynthesis.cancel();
+            isSpeaking = false;
+            speechPaused = false;
+            currentUtterance = null;
+            updateTTSButtons();
+            showToast('Speech stopped', 'info');
+        }
+
+        function updateTTSButtons() {
+            const playBtn = document.getElementById('playTTSBtn');
+            const pauseBtn = document.getElementById('pauseTTSBtn');
+            const stopBtn = document.getElementById('stopTTSBtn');
+
+            if (!isSpeaking) {
+                playBtn.disabled = false;
+                pauseBtn.disabled = true;
+                stopBtn.disabled = true;
+                pauseBtn.innerHTML = '<i class="fas fa-pause mr-1"></i>Pause';
+            } else {
+                playBtn.disabled = true;
+                pauseBtn.disabled = false;
+                stopBtn.disabled = false;
+                if (speechPaused) {
+                    pauseBtn.innerHTML = '<i class="fas fa-play mr-1"></i>Resume';
+                } else {
+                    pauseBtn.innerHTML = '<i class="fas fa-pause mr-1"></i>Pause';
+                }
+            }
+        }
+
+        // Recording Functions
+        async function toggleRecording() {
+            const recordBtn = document.getElementById('recordBtn');
+            
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    const startTime = Date.now();
+                    
+                    mediaRecorder.ondataavailable = event => {
+                        if (event.data.size > 0) {
+                            audioChunks.push(event.data);
+                        }
+                    };
+                    
+                    mediaRecorder.onstop = () => {
+                        const duration = Math.round((Date.now() - startTime) / 1000);
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        saveAudioNote(audioUrl, duration);
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+                    
+                    mediaRecorder.start();
+                    isRecording = true;
+                    recordBtn.classList.add('recording');
+                    recordBtn.innerHTML = '<i class="fas fa-stop text-xl"></i>';
+                    recordBtn.title = 'Stop Recording';
+                    showToast('Recording started...', 'info');
+                    
+                } catch (error) {
+                    console.error('Microphone access error:', error);
+                    showToast('Could not access microphone. Please check permissions.', 'error');
+                }
+            } else {
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                }
+                isRecording = false;
+                recordBtn.classList.remove('recording');
+                recordBtn.innerHTML = '<i class="fas fa-microphone text-xl"></i>';
+                recordBtn.title = 'Record Audio Note';
+                showToast('Recording stopped', 'info');
+            }
+        }
+
+        function saveAudioNote(audioUrl, duration) {
+            const note = {
+                id: Date.now(),
+                content: audioUrl,
+                type: 'audio',
+                duration: duration,
+                bookId: currentBook ? currentBook.id : null,
+                bookTitle: currentBook ? currentBook.title : 'General Note',
+                chapter: currentChapter || 0,
+                page: currentPage || 0,
+                timestamp: new Date().toISOString()
+            };
+            
+            currentAudioNotes.unshift(note);
+            localStorage.setItem('nizebook_audio_notes', JSON.stringify(currentAudioNotes));
+            displayAudioNotes();
+            showToast('Audio note saved successfully!', 'success');
+        }
+
+        // Enhanced file upload with proper viewer
+        document.getElementById("fileInput").addEventListener("change", function (event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Show title input for editing
+            document.getElementById('documentTitleInput').value = file.name.replace(/\.[^/.]+$/, "");
+            
+            const reader = new FileReader();
+            const viewer = document.getElementById("viewer");
+            const documentViewer = document.getElementById('documentViewer');
+            
+            // Show the viewer
+            documentViewer.style.display = 'block';
+            
+            // Show loading state
+            viewer.innerHTML = '<div class="processing-indicator"><div class="spinner"></div>Loading document...</div>';
+            
+            reader.onload = function (e) {
+                const fileURL = e.target.result;
+                
+                // Display PDF in an iframe
+                if (file.type === "application/pdf") {
+                    viewer.innerHTML = `
+                        <iframe src="${fileURL}" width="100%" height="600px" style="border: none; border-radius: 8px;"></iframe>
+                    `;
+                    // Also process for nizebook functionality
+                    processFile(file);
+                }
+                // Display text files directly
+                else if (file.type.startsWith("text")) {
+                    viewer.innerHTML = `
+                        <div class="document-content">
+                            <pre style="white-space: pre-wrap; font-family: inherit;">${e.target.result}</pre>
+                        </div>
+                    `;
+                    // Also process for nizebook functionality
+                    processFile(file);
+                }
+                // Handle DOCX files
+                else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || file.name.toLowerCase().endsWith('.docx')) {
+                    mammoth.convertToHtml({arrayBuffer: e.target.result})
+                        .then(function(result) {
+                            viewer.innerHTML = `
+                                <div class="document-content">
+                                    ${result.value}
+                                </div>
+                            `;
+                            // Also process for nizebook functionality
+                            processFile(file);
+                        })
+                        .catch(function(error) {
+                            viewer.innerHTML = `
+                                <div class="document-content">
+                                    <p style="color: #ef4444;">Error loading document: ${error.message}</p>
+                                </div>
+                            `;
+                        });
+                }
+                else {
+                    viewer.innerHTML = `
+                        <div class="document-content">
+                            <p>Cannot preview this file type (${file.type}). But you can still process it for reading in NIZEBOOK.</p>
+                        </div>
+                    `;
+                    // Still try to process for nizebook functionality
+                    processFile(file);
+                }
+            };
+
+            // Read as appropriate format
+            if (file.type === "application/pdf" || file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || file.name.toLowerCase().endsWith('.docx')) {
+                reader.readAsArrayBuffer(file);
+            } else {
+                reader.readAsText(file);
+            }
+        });
+
+        // Theme management with proper moon/sun icons
+        function loadTheme() {
+            const theme = localStorage.getItem('nizebook_theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            const toggle = document.getElementById('themeToggle');
+            toggle.innerHTML = theme === 'dark' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('nizebook_theme', newTheme);
+            loadTheme();
+        }
+
+        // Section management
+        function showSection(sectionName) {
+            document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+            document.querySelectorAll('.nav-icon').forEach(icon => icon.classList.remove('active'));
+            document.getElementById(sectionName).classList.add('active');
+            document.querySelector(`[onclick="showSection('${sectionName}')"]`).classList.add('active');
+            
+            if (sectionName === 'reading') {
+                displayCurrentPage();
+                document.getElementById('chaptersList').style.display = 'block';
+            } else {
+                document.getElementById('chaptersList').style.display = 'none';
+            }
+        }
+
+        // Enhanced file handling with proper document processing
+        async function processFile(file) {
+            showToast('Processing document...', 'info');
+            
+            const fileType = file.type;
+            const fileName = file.name.toLowerCase();
+            
+            try {
+                let content = '';
+                let contentType = 'text';
+                
+                if (fileType === 'application/pdf' || fileName.endsWith('.pdf')) {
+                    const result = await processPDF(file);
+                    content = result.text;
+                    contentType = 'pdf';
+                } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || fileName.endsWith('.docx')) {
+                    content = await processDOCX(file);
+                    contentType = 'docx';
+                } else if (fileType === 'application/msword' || fileName.endsWith('.doc')) {
+                    showToast('DOC files are not fully supported. Please use DOCX format for better results.', 'warning');
+                    content = await readAsText(file);
+                    contentType = 'text';
+                } else {
+                    content = await readAsText(file);
+                    contentType = 'text';
+                }
+                
+                if (!content.trim()) {
+                    throw new Error('No readable content found in the document');
+                }
+                
+                // Get the title from the input field or use the filename
+                const titleInput = document.getElementById('documentTitleInput');
+                const title = titleInput.value.trim() || file.name.replace(/\.[^/.]+$/, "");
+                
+                const book = {
+                    id: Date.now(),
+                    title: title,
+                    content: content,
+                    contentType: contentType,
+                    chapters: extractChapters(content),
+                    currentChapter: 0,
+                    currentPage: 0,
+                    uploadDate: new Date().toISOString()
+                };
+                
+                if (!book.chapters || book.chapters.length === 0) {
+                    throw new Error('Failed to extract chapters from the document');
+                }
+                
+                currentBooks.push(book);
+                localStorage.setItem('nizebook_books', JSON.stringify(currentBooks));
+                currentBook = book;
+                displayLibrary();
+                displayChapters();
+                showSection('reading');
+                displayCurrentPage();
+                showToast('Document uploaded successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Error processing file:', error);
+                showToast('Error processing document: ' + error.message, 'error');
+            }
+        }
+
+        function handleFileDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                // Trigger the file input change event
+                const fileInput = document.getElementById('fileInput');
+                fileInput.files = files;
+                fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // The file processing is now handled by the change event listener above
+                console.log('File selected:', file.name);
+            }
+        }
+
+        async function processPDF(file) {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                    let fullText = '';
+                    
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        const pageText = textContent.items.map(item => item.str).join(' ');
+                        fullText += pageText + '\n\n';
+                    }
+                    
+                    resolve({ text: fullText });
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+
+        async function processDOCX(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const arrayBuffer = e.target.result;
+                    mammoth.extractRawText({ arrayBuffer: arrayBuffer })
+                        .then(result => {
+                            resolve(result.value);
+                        })
+                        .catch(error => {
+                            console.error('DOCX processing error:', error);
+                            reject(error);
+                        });
+                };
+                reader.onerror = () => reject(new Error('Failed to read DOCX file'));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function readAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(e.target.result);
+                reader.onerror = () => reject(new Error('Failed to read text file'));
+                reader.readAsText(file);
+            });
+        }
+
+        function extractChapters(content) {
+            const chapters = [];
+            const lines = content.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            let currentChapter = { title: 'Introduction', content: '', pages: [] };
+            let currentContent = '';
+            
+            lines.forEach(line => {
+                if (line.match(/^(Chapter|CHAPTER|Ch\.|CH\.)\s+\d+/i) || 
+                    line.match(/^\d+\.\s+[A-Z]/i) ||
+                    line.match(/^[A-Z][A-Z\s]{8,}$/i) ||
+                    line.match(/^(PART|Part)\s+\d+/i)) {
+                    
+                    if (currentContent.trim()) {
+                        currentChapter.pages = splitIntoPages(currentContent);
+                        if (currentChapter.pages.length > 0) {
+                            chapters.push(currentChapter);
+                        }
+                        currentChapter = { 
+                            title: line || `Chapter ${chapters.length + 1}`, 
+                            content: '', 
+                            pages: [] 
+                        };
+                        currentContent = '';
+                    } else {
+                        currentChapter.title = line;
+                    }
+                } else {
+                    currentContent += line + '\n';
+                }
+            });
+            
+            if (currentContent.trim()) {
+                currentChapter.pages = splitIntoPages(currentContent);
+                if (currentChapter.pages.length > 0) {
+                    chapters.push(currentChapter);
+                }
+            }
+            
+            if (chapters.length === 0) {
+                return [{
+                    title: 'Full Document',
+                    content: content,
+                    pages: splitIntoPages(content)
+                }];
+            }
+            
+            return chapters;
+        }
+
+        function splitIntoPages(content) {
+            const wordsPerPage = 400;
+            const words = content.split(/\s+/).filter(w => w.length > 0);
+            const pages = [];
+            
+            if (words.length === 0) {
+                return ['No content available for this page'];
+            }
+            
+            for (let i = 0; i < words.length; i += wordsPerPage) {
+                const pageWords = words.slice(i, i + wordsPerPage);
+                let pageText = pageWords.join(' ');
+                
+                if (i + wordsPerPage < words.length && !pageText.endsWith('.') && !pageText.endsWith('!') && !pageText.endsWith('?')) {
+                    const lastSentenceEnd = Math.max(
+                        pageText.lastIndexOf('.'),
+                        pageText.lastIndexOf('!'),
+                        pageText.lastIndexOf('?')
+                    );
+                    if (lastSentenceEnd > pageText.length * 0.7) {
+                        pageText = pageText.substring(0, lastSentenceEnd + 1);
+                        i = i + pageWords.slice(0, pageText.split(' ').length).length - wordsPerPage;
+                    }
+                }
+                
+                pages.push(pageText);
+            }
+            
+            return pages.length > 0 ? pages : ['No content available for this page'];
+        }
+
+        function displayCurrentPage() {
+            if (!currentBook || !currentBook.chapters || currentBook.chapters.length === 0) {
+                document.getElementById('readingContent').innerHTML = `
+                    <div class="document-content">
+                        <p>No content available. Please upload a valid document.</p>
+                    </div>
+                `;
+                document.getElementById('currentBookTitle').textContent = 'No Book Selected';
+                document.getElementById('currentChapterTitle').textContent = '';
+                document.getElementById('readingProgress').textContent = 'Page 0 of 0';
+                document.getElementById('progressBar').style.width = '0%';
+                document.getElementById('prevBtn').disabled = true;
+                document.getElementById('nextBtn').disabled = true;
+                return;
+            }
+            
+            const chapter = currentBook.chapters[currentChapter];
+            if (!chapter || !chapter.pages || chapter.pages.length === 0) {
+                document.getElementById('readingContent').innerHTML = `
+                    <div class="document-content">
+                        <p>No content available for this chapter.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const page = chapter.pages[currentPage] || 'No content available for this page';
+            
+            document.getElementById('currentBookTitle').textContent = currentBook.title;
+            document.getElementById('currentChapterTitle').textContent = chapter.title;
+            
+            const readingContent = document.getElementById('readingContent');
+            readingContent.innerHTML = `
+                <div class="document-content">
+                    ${formatDocumentContent(page)}
+                </div>
+            `;
+            
+            // Update bottom page indicator
+            const totalPages = chapter.pages.length;
+            document.getElementById('bottomPageIndicator').textContent = `Page ${currentPage + 1} of ${totalPages}`;
+            
+            if (Math.random() < 0.3) {
+                document.getElementById('voicePrompt').style.display = 'block';
+                setTimeout(() => document.getElementById('voicePrompt').style.display = 'none', 5000);
+            }
+            
+            const totalBookPages = currentBook.chapters.reduce((sum, ch) => sum + ch.pages.length, 0);
+            const currentPageNum = currentBook.chapters.slice(0, currentChapter).reduce((sum, ch) => sum + ch.pages.length, 0) + currentPage + 1;
+            const progress = Math.round((currentPageNum / totalBookPages) * 100);
+            
+            document.getElementById('readingProgress').textContent = `Page ${currentPageNum} of ${totalBookPages}`;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            
+            document.getElementById('prevBtn').disabled = currentChapter === 0 && currentPage === 0;
+            document.getElementById('nextBtn').disabled = 
+                currentChapter === currentBook.chapters.length - 1 && 
+                currentPage === chapter.pages.length - 1;
+            
+            displayChapters();
+            saveProgress();
+        }
+
+        function formatDocumentContent(text) {
+            if (!text || typeof text !== 'string' || text.trim() === '') {
+                return '<p>No content available for this page.</p>';
+            }
+            
+            return text
+                .replace(/\n\n+/g, '</p><p>')
+                .replace(/^\s*/, '<p>')
+                .replace(/\s*$/, '</p>')
+                .replace(/([.!?])\s+([A-Z])/g, '$1</p><p>$2')
+                .replace(/\b([A-Z][A-Z\s]{5,})\b/g, '<h3>$1</h3>')
+                .replace(/^\d+\.\s*(.+)$/gm, '<h4>$1</h4>')
+                .replace(/<p>\s*<\/p>/g, '')
+                .replace(/<p>\s*<h/g, '<h')
+                .replace(/<\/h[1-6]>\s*<\/p>/g, (match) => match.replace('</p>', ''));
+        }
+
+        function displayLibrary() {
+            const grid = document.getElementById('libraryGrid');
+            if (currentBooks.length === 0) {
+                grid.innerHTML = `
+                    <div class="text-center py-12 col-span-full">
+                        <i class="fas fa-book text-6xl text-gray-400 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-600 mb-2">No books yet</h3>
+                        <p class="text-gray-500">Upload your first document to get started</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = currentBooks.map(book => {
+                const iconClass = book.contentType === 'pdf' ? 'fas fa-file-pdf' : 
+                                book.contentType === 'docx' ? 'fas fa-file-word' : 'fas fa-file-alt';
+                
+                return `
+                    <div class="book-card card p-6" onclick="openBook(${book.id})">
+                        <div class="flex items-center mb-4">
+                            <i class="${iconClass} text-3xl mr-4" style="color: var(--accent-color);"></i>
+                            <div class="flex-1">
+                                <h3 class="font-semibold text-lg truncate">${book.title}</h3>
+                                <p class="text-sm text-gray-600">${book.chapters.length} chapters • ${book.contentType.toUpperCase()}</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-500">
+                                ${new Date(book.uploadDate).toLocaleDateString()}
+                            </span>
+                            <span class="text-sm font-medium" style="color: var(--accent-color);">
+                                Ch. ${book.currentChapter + 1}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function displayChapters() {
+            const chaptersContent = document.getElementById('chaptersContent');
+            if (!currentBook) return;
+            
+            chaptersContent.innerHTML = currentBook.chapters.map((chapter, index) => `
+                <div class="chapter-item ${index === currentChapter ? 'active' : ''}" 
+                     onclick="goToChapter(${index})">
+                    <div class="font-medium truncate">${chapter.title}</div>
+                    <div class="text-sm opacity-75">${chapter.pages.length} pages</div>
+                </div>
+            `).join('');
+        }
+
+        function openBook(bookId) {
+            currentBook = currentBooks.find(book => book.id === bookId);
+            currentChapter = currentBook.currentChapter || 0;
+            currentPage = currentBook.currentPage || 0;
+            displayChapters();
+            showSection('reading');
+        }
+
+        function goToChapter(chapterIndex) {
+            currentChapter = chapterIndex;
+            currentPage = 0;
+            displayCurrentPage();
+        }
+
+        function nextPage() {
+            const chapter = currentBook.chapters[currentChapter];
+            if (currentPage < chapter.pages.length - 1) {
+                currentPage++;
+            } else if (currentChapter < currentBook.chapters.length - 1) {
+                currentChapter++;
+                currentPage = 0;
+            }
+            displayCurrentPage();
+        }
+
+        function previousPage() {
+            if (currentPage > 0) {
+                currentPage--;
+            } else if (currentChapter > 0) {
+                currentChapter--;
+                currentPage = currentBook.chapters[currentChapter].pages.length - 1;
+            }
+            displayCurrentPage();
+        }
+
+        function saveProgress() {
+            if (currentBook) {
+                currentBook.currentChapter = currentChapter;
+                currentBook.currentPage = currentPage;
+                localStorage.setItem('nizebook_books', JSON.stringify(currentBooks));
+            }
+        }
+
+        async function searchDictionary() {
+            const input = document.getElementById('dictionaryInput');
+            const results = document.getElementById('dictionaryResults');
+            const word = input.value.trim();
+            
+            if (!word) return;
+            
+            results.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Searching...</div>';
+            
+            try {
+                // First try DuckDuckGo API
+                const ddgResponse = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(word)}&format=json&no_html=1&skip_disambig=1`);
+                const ddgData = await ddgResponse.json();
+                
+                if (ddgData.AbstractText) {
+                    results.innerHTML = `
+                        <div class="space-y-2">
+                            <h4 class="font-semibold">${word}</h4>
+                            <p class="text-sm">${ddgData.AbstractText}</p>
+                            ${ddgData.AbstractURL ? `<p class="text-xs text-gray-500">Source: <a href="${ddgData.AbstractURL}" target="_blank" class="underline">${new URL(ddgData.AbstractURL).hostname}</a></p>` : ''}
+                        </div>
+                    `;
+                } else {
+                    // Fallback to Wikipedia API
+                    const wikiResponse = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(word)}`);
+                    const wikiData = await wikiResponse.json();
+                    
+                    if (wikiData.extract) {
+                        results.innerHTML = `
+                            <div class="space-y-2">
+                                <h4 class="font-semibold">${wikiData.title || word}</h4>
+                                <p class="text-sm">${wikiData.extract}</p>
+                                ${wikiData.content_urls ? `<p class="text-xs text-gray-500">Source: <a href="${wikiData.content_urls.desktop.page}" target="_blank" class="underline">Wikipedia</a></p>` : ''}
+                            </div>
+                        `;
+                    } else {
+                        results.innerHTML = `<p class="text-sm text-gray-500">No definition found for "${word}"</p>`;
+                    }
+                }
+            } catch (error) {
+                results.innerHTML = `<p class="text-sm text-gray-500">Error searching for "${word}"</p>`;
+            }
+        }
+
+        function saveQuickNote() {
+            const input = document.getElementById('quickNoteInput');
+            const content = input.value.trim();
+            
+            if (!content) return;
+            
+            const note = {
+                id: Date.now(),
+                content: content,
+                type: 'text',
+                bookId: currentBook ? currentBook.id : null,
+                bookTitle: currentBook ? currentBook.title : null,
+                chapter: currentChapter,
+                page: currentPage,
+                timestamp: new Date().toISOString()
+            };
+            
+            currentNotes.unshift(note);
+            localStorage.setItem('nizebook_notes', JSON.stringify(currentNotes));
+            input.value = '';
+            displayNotes();
+            displaySavedNotes();
+            showToast('Note saved!', 'success');
+        }
+
+        function displayNotes() {
+            const notesList = document.getElementById('notesList');
+            if (currentNotes.length === 0) {
+                notesList.innerHTML = `
+                    <div class="text-center text-gray-500 py-4">
+                        <i class="fas fa-sticky-note text-2xl mb-2"></i>
+                        <p class="text-sm">No notes yet</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            notesList.innerHTML = currentNotes.map(note => `
+                <div class="note-item">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="font-medium text-sm truncate">${note.bookTitle || 'Unknown Book'}</span>
+                        <span class="text-xs text-gray-500">
+                            ${new Date(note.timestamp).toLocaleDateString()}
+                        </span>
+                    </div>
+                    <p class="text-sm mb-2">${note.content}</p>
+                    <div class="text-xs text-gray-500">
+                        Chapter ${note.chapter + 1}, Page ${note.page + 1}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displaySavedNotes() {
+            const notesList = document.getElementById('savedNotesList');
+            const notesCount = document.getElementById('notesCount');
+            
+            if (currentNotes.length === 0) {
+                notesList.innerHTML = `
+                    <div class="text-center py-12">
+                        <i class="fas fa-sticky-note text-6xl text-gray-400 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-600 mb-2">No saved notes yet</h3>
+                        <p class="text-gray-500">Start reading and add notes to your documents</p>
+                    </div>
+                `;
+                notesCount.textContent = '0 notes';
+                return;
+            }
+            
+            notesCount.textContent = `${currentNotes.length} notes`;
+            notesList.innerHTML = currentNotes.map(note => `
+                <div class="note-card">
+                    <div class="note-meta">
+                        <span>${note.bookTitle || 'Unknown Book'}</span>
+                        <span>${new Date(note.timestamp).toLocaleDateString()}</span>
+                    </div>
+                    <p class="mb-2">${note.content}</p>
+                    <div class="text-xs text-gray-500">
+                        Chapter ${note.chapter + 1}, Page ${note.page + 1}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayAudioNotes() {
+            const audioGrid = document.getElementById('audioNotesGrid');
+            const audioCount = document.getElementById('audioCount');
+            
+            if (currentAudioNotes.length === 0) {
+                audioGrid.innerHTML = `
+                    <div class="text-center py-12">
+                        <i class="fas fa-microphone text-6xl text-gray-400 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-600 mb-2">No audio notes yet</h3>
+                        <p class="text-gray-500">Start reading and record your thoughts</p>
+                    </div>
+                `;
+                audioCount.textContent = '0 recordings';
+                return;
+            }
+            
+            audioCount.textContent = `${currentAudioNotes.length} recordings`;
+            audioGrid.innerHTML = currentAudioNotes.map(note => `
+                <div class="audio-note-card">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h4 class="font-semibold text-lg">${note.bookTitle || 'Audio Note'}</h4>
+                            <p class="text-sm text-gray-600">Chapter ${note.chapter + 1}, Page ${note.page + 1}</p>
+                        </div>
+                        <span class="text-xs text-gray-500">
+                            ${new Date(note.timestamp).toLocaleDateString()}
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <button onclick="playAudioNote('${note.id}')" class="btn-primary">
+                            <i class="fas fa-play mr-2"></i>Play Recording
+                        </button>
+                        <div class="text-sm text-gray-500">
+                            <i class="fas fa-clock mr-1"></i>
+                            ${note.duration || 'Unknown'} sec
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function playAudioNote(noteId) {
+            const note = currentAudioNotes.find(n => n.id == noteId);
+            if (note && note.type === 'audio') {
+                const audio = new Audio(note.content);
+                audio.play();
+                showToast('Playing audio note...', 'info');
+            }
+        }
+
+        function speakCurrentPage() {
+            startTextToSpeech();
+        }
+
+        async function analyzeDocument(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            showToast('Analyzing document...', 'info');
+            
+            try {
+                let content = '';
+                const fileType = file.type;
+                const fileName = file.name.toLowerCase();
+                
+                if (fileType === 'application/pdf' || fileName.endsWith('.pdf')) {
+                    const result = await processPDF(file);
+                    content = result.text;
+                } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || fileName.endsWith('.docx')) {
+                    content = await processDOCX(file);
+                } else {
+                    content = await readAsText(file);
+                }
+                
+                const analysis = performAnalysis(content);
+                displayAnalysis(analysis, file.name);
+            } catch (error) {
+                showToast('Error analyzing document: ' + error.message, 'error');
+            }
+        }
+
+        function explainText() {
+            const input = document.getElementById('customAnalysisInput');
+            const text = input.value.trim();
+            
+            if (!text) {
+                showToast('Please enter some text to analyze', 'warning');
+                return;
+            }
+            
+            showToast('Analyzing text...', 'info');
+            const explanation = generateExplanation(text);
+            displayExplanation(explanation, text);
+        }
+
+        async function searchWebExamples() {
+            const input = document.getElementById('customAnalysisInput');
+            const text = input.value.trim();
+            
+            if (!text) {
+                showToast('Please enter some text to search for', 'warning');
+                return;
+            }
+            
+            showToast('Searching for examples...', 'info');
+            
+            try {
+                // Use DuckDuckGo API for instant answers
+                const ddgResponse = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(text)}+examples&format=json&no_html=1&skip_disambig=1`);
+                const ddgData = await ddgResponse.json();
+                
+                // Use Wikipedia API for detailed information
+                const wikiResponse = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(text)}`);
+                const wikiData = await wikiResponse.json();
+                
+                displayWebSearchResults(ddgData, wikiData, text);
+            } catch (error) {
+                showToast('Error searching for examples', 'error');
+            }
+        }
+
+        function clearAnalysisInput() {
+            document.getElementById('customAnalysisInput').value = '';
+            showToast('Input cleared', 'info');
+        }
+
+        function generateExplanation(text) {
+            const concepts = identifyConcepts(text);
+            const examples = generateExamples(concepts);
+            const breakdown = breakdownText(text);
+            
+            return {
+                summary: `This text discusses ${concepts.join(', ')}. Here's a detailed breakdown:`,
+                breakdown: breakdown,
+                examples: examples,
+                keyPoints: extractKeyPoints(text),
+                difficulty: assessDifficulty(text)
+            };
+        }
+
+        function identifyConcepts(text) {
+            const words = text.toLowerCase().split(/\s+/);
+            const concepts = [];
+            const conceptWords = ['theory', 'principle', 'concept', 'method', 'process', 'system', 'model', 'framework'];
+            words.forEach(word => {
+                if (conceptWords.some(concept => word.includes(concept))) concepts.push(word);
+            });
+            return concepts.length > 0 ? concepts : ['general concepts'];
+        }
+
+        function generateExamples(concepts) {
+            const examples = [];
+            concepts.forEach(concept => {
+                switch(concept.toLowerCase()) {
+                    case 'theory':
+                        examples.push('Like Einstein\'s Theory of Relativity explains space and time');
+                        break;
+                    case 'principle':
+                        examples.push('Similar to the principle of supply and demand in economics');
+                        break;
+                    case 'process':
+                        examples.push('Like the process of photosynthesis in plants');
+                        break;
+                    default:
+                        examples.push(`Consider real-world applications of ${concept}`);
+                }
+            });
+            return examples;
+        }
+
+        function breakdownText(text) {
+            const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+            return sentences.map((sentence, index) => ({
+                sentence: sentence.trim(),
+                explanation: `Sentence ${index + 1}: This explains ${sentence.length > 50 ? 'a complex idea' : 'a key point'} about the topic.`
+            }));
+        }
+
+        function extractKeyPoints(text) {
+            const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 20);
+            return sentences.slice(0, 3).map(s => s.trim());
+        }
+
+        function assessDifficulty(text) {
+            const avgWordLength = text.split(/\s+/).reduce((sum, word) => sum + word.length, 0) / text.split(/\s+/).length;
+            const avgSentenceLength = text.split(/[.!?]+/).reduce((sum, sentence) => sum + sentence.split(/\s+/).length, 0) / text.split(/[.!?]+/).length;
+            if (avgWordLength > 6 && avgSentenceLength > 20) return 'Advanced';
+            if (avgWordLength > 5 && avgSentenceLength > 15) return 'Intermediate';
+            return 'Beginner';
+        }
+
+        function displayExplanation(explanation, originalText) {
+            const resultsDiv = document.getElementById('analysisResults');
+            resultsDiv.innerHTML = `
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold mb-4">
+                        <i class="fas fa-brain mr-2" style="color: var(--accent-color);"></i>
+                        AI Explanation & Examples
+                    </h3>
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold mb-2">Original Text:</h4>
+                        <div class="p-4 bg-gray-100 rounded-lg italic">"${originalText}"</div>
+                    </div>
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold mb-3">Summary</h4>
+                        <p class="text-gray-700">${explanation.summary}</p>
+                        <div class="mt-2">
+                            <span class="inline-block px-3 py-1 text-sm rounded-full" style="background-color: var(--hover-bg); color: var(--accent-color);">
+                                Difficulty: ${explanation.difficulty}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold mb-3">Sentence Breakdown</h4>
+                        <div class="space-y-3">
+                            ${explanation.breakdown.map(item => `
+                                <div class="summary-point">
+                                    <p class="font-medium mb-1">"${item.sentence}"</p>
+                                    <p class="text-sm text-gray-600">${item.explanation}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold mb-3">Real-World Examples</h4>
+                        <div class="space-y-2">
+                            ${explanation.examples.map(example => `
+                                <div class="summary-point">
+                                    <i class="fas fa-lightbulb mr-2" style="color: var(--accent-color);"></i>
+                                    ${example}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold mb-3">Key Takeaways</h4>
+                        <div class="space-y-2">
+                            ${explanation.keyPoints.map(point => `
+                                <div class="summary-point">
+                                    <i class="fas fa-check mr-2" style="color: var(--accent-color);"></i>
+                                    ${point}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function displayWebSearchResults(ddgData, wikiData, originalText) {
+            const resultsDiv = document.getElementById('analysisResults');
+            
+            let ddgContent = '';
+            if (ddgData.AbstractText) {
+                ddgContent = `
+                    <div class="search-result">
+                        <h4>${ddgData.Heading || 'Search Result'}</h4>
+                        <p>${ddgData.AbstractText}</p>
+                        ${ddgData.AbstractURL ? `<div class="search-source">Source: <a href="${ddgData.AbstractURL}" target="_blank">${new URL(ddgData.AbstractURL).hostname}</a></div>` : ''}
+                    </div>
+                `;
+            }
+            
+            let wikiContent = '';
+            if (wikiData.extract) {
+                wikiContent = `
+                    <div class="search-result">
+                        <h4>${wikiData.title || 'Wikipedia'}</h4>
+                        <p>${wikiData.extract}</p>
+                        ${wikiData.content_urls ? `<div class="search-source">Source: <a href="${wikiData.content_urls.desktop.page}" target="_blank">Wikipedia</a></div>` : ''}
+                    </div>
+                `;
+            }
+            
+            resultsDiv.innerHTML = `
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold mb-4">
+                        <i class="fas fa-search mr-2" style="color: var(--accent-color);"></i>
+                        Web Search Results
+                    </h3>
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold mb-2">Searching for:</h4>
+                        <div class="p-4 bg-gray-100 rounded-lg italic">"${originalText}"</div>
+                    </div>
+                    ${ddgContent || wikiContent ? `
+                        <div class="mb-6">
+                            <h4 class="text-lg font-semibold mb-3">Information Found</h4>
+                            ${ddgContent}
+                            ${wikiContent}
+                        </div>
+                    ` : ''}
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold mb-3">Continue Your Research</h4>
+                        <div class="grid gap-4">
+                            <a href="https://www.google.com/search?q=${encodeURIComponent(originalText + ' examples explanation')}" target="_blank" class="block p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h5 class="font-semibold">Google Search</h5>
+                                        <p class="text-sm text-gray-600">Find more examples and explanations</p>
+                                    </div>
+                                    <i class="fas fa-external-link-alt text-blue-500"></i>
+                                </div>
+                            </a>
+                            <a href="https://www.khanacademy.org/search?referer=%2F&page_search_query=${encodeURIComponent(originalText)}" target="_blank" class="block p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h5 class="font-semibold">Khan Academy Lessons</h5>
+                                        <p class="text-sm text-gray-600">Find educational content and examples</p>
+                                    </div>
+                                    <i class="fas fa-external-link-alt text-blue-500"></i>
+                                </div>
+                            </a>
+                            <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(originalText + ' explained with examples')}" target="_blank" class="block p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h5 class="font-semibold">YouTube Video Explanations</h5>
+                                        <p class="text-sm text-gray-600">Watch visual explanations and examples</p>
+                                    </div>
+                                    <i class="fas fa-external-link-alt text-blue-500"></i>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function performAnalysis(content) {
+            const words = content.split(/\s+/).filter(w => w.length > 0);
+            const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
+            const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+            
+            const keyPoints = sentences
+                .filter(s => s.length > 50 && s.length < 200)
+                .slice(0, 5)
+                .map(s => s.trim());
+            
+            const lessons = [
+                "Focus on understanding the main themes and concepts",
+                "Take notes on important definitions and examples",
+                "Review key points at the end of each section",
+                "Connect new information to what you already know",
+                "Use the voice recording feature to capture your thoughts"
+            ];
+            
+            const searchSuggestions = extractKeywords(content).slice(0, 5);
+            
+            return {
+                stats: {
+                    words: words.length,
+                    sentences: sentences.length,
+                    paragraphs: paragraphs.length,
+                    readingTime: Math.ceil(words.length / 200),
+                    difficulty: assessDifficulty(content)
+                },
+                keyPoints,
+                lessons,
+                searchSuggestions
+            };
+        }
+
+        function extractKeywords(content) {
+            const words = content.toLowerCase().split(/\s+/);
+            const stopWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'shall', 'this', 'that', 'these', 'those'];
+            
+            const wordFreq = {};
+            words.forEach(word => {
+                word = word.replace(/[^\w]/g, '');
+                if (word.length > 3 && !stopWords.includes(word)) {
+                    wordFreq[word] = (wordFreq[word] || 0) + 1;
+                }
+            });
+            
+            return Object.entries(wordFreq)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10)
+                .map(([word]) => word);
+        }
+
+        function displayAnalysis(analysis, fileName) {
+            const resultsDiv = document.getElementById('analysisResults');
+            resultsDiv.innerHTML = `
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold mb-4">Analysis of: ${fileName}</h3>
+                    <div class="grid md:grid-cols-5 gap-4 mb-6">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold" style="color: var(--accent-color);">${analysis.stats.words}</div>
+                            <div class="text-sm text-gray-600">Words</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold" style="color: var(--accent-color);">${analysis.stats.sentences}</div>
+                            <div class="text-sm text-gray-600">Sentences</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold" style="color: var(--accent-color);">${analysis.stats.paragraphs}</div>
+                            <div class="text-sm text-gray-600">Paragraphs</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold" style="color: var(--accent-color);">${analysis.stats.readingTime}</div>
+                            <div class="text-sm text-gray-600">Min. Read</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-lg font-bold" style="color: var(--accent-color);">${analysis.stats.difficulty}</div>
+                            <div class="text-sm text-gray-600">Level</div>
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold mb-3">Key Points</h4>
+                        <div class="space-y-2">
+                            ${analysis.keyPoints.map(point => `
+                                <div class="summary-point">
+                                    <i class="fas fa-chevron-right mr-2" style="color: var(--accent-color);"></i>
+                                    ${point}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold mb-3">Learning Tips</h4>
+                        <div class="space-y-2">
+                            ${analysis.lessons.map(lesson => `
+                                <div class="summary-point">
+                                    <i class="fas fa-lightbulb mr-2" style="color: var(--accent-color);"></i>
+                                    ${lesson}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold mb-3">Suggested Web Searches</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            ${analysis.searchSuggestions.map(keyword => `
+                                <a href="https://www.google.com/search?q=${encodeURIComponent(keyword)}" 
+                                   target="_blank" 
+                                   class="btn-secondary text-sm text-center">
+                                    ${keyword} <i class="fas fa-external-link-alt ml-1"></i>
+                                </a>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateLanguage() {
+            const selectedLang = document.getElementById('languageSelector').value;
+            updateTTSLanguageDisplay();
+            showToast(`Language changed to ${selectedLang.toUpperCase()}`, 'info');
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-yellow-500',
+                info: 'bg-blue-500'
+            };
+            toast.className = `fixed bottom-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all transform translate-y-0`;
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation-triangle' : type === 'warning' ? 'exclamation' : 'info'} mr-2"></i>
+                    ${message}
+                </div>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.style.transform = 'translateY(-10px)', 100);
+            setTimeout(() => {
+                toast.style.transform = 'translateY(100px)';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function addMobileMenuButton() {
+            const mobileToggle = document.createElement('button');
+            mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
+            mobileToggle.className = 'fixed top-4 left-4 z-50 text-white p-2 rounded-lg';
+            mobileToggle.style.backgroundColor = 'var(--accent-color)';
+            mobileToggle.onclick = toggleMobileMenu;
+            document.body.appendChild(mobileToggle);
+        }
+
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('navSidebar');
+            const rightPanel = document.getElementById('rightPanel');
+            sidebar.classList.toggle('open');
+            rightPanel.classList.toggle('open');
+        }
+
+        // Event listeners
+        document.getElementById('languageSelector').addEventListener('change', updateLanguage);
+        document.getElementById('dictionaryInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') searchDictionary();
+        });
+        document.getElementById('quickNoteInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) saveQuickNote();
+        });
+        document.getElementById('customAnalysisInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) explainText();
+        });
+
+        // Window resize handler
+        window.addEventListener('resize', function() {
+            if (window.innerWidth <= 1024 && !document.querySelector('.fixed.top-4.left-4')) {
+                addMobileMenuButton();
+            }
+        });
+
+        // Load voices when available
+        if ('speechSynthesis' in window) {
+            speechSynthesis.addEventListener('voiceschanged', function() {
+                updateTTSLanguageDisplay();
+            });
+        }
+    </script>
+</body>
+</html>
