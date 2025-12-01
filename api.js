@@ -637,4 +637,5 @@ window.apiUtils = {
             return `${service} service temporarily unavailable. Please try again.`;
         }
     }
+
 };
