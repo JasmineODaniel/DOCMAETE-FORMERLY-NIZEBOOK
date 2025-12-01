@@ -3,7 +3,7 @@ Core Files to Create:
 index.html - Main HTML structure with navigation and sections
 styles.css - Complete styling with dark/light themes
 script.js - Main JavaScript functionality
-camera.js - Camera and OCR functionality
+camera.js - Camera and OCR functionality 
 audio.js - Audio playback and recording features
 api.js - API integrations for translation, search, OCR
 Key Features:
@@ -24,3 +24,4 @@ Real search results with source links
 No placeholders, all functional features
 Michroma font for headings
 White recording icon, themed other icons
+
