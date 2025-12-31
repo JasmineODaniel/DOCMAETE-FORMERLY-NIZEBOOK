@@ -10,7 +10,7 @@ if (typeof pdfjsLib !== 'undefined') {
 let currentBooks = JSON.parse(localStorage.getItem('docmate_books')) || [];
 let currentNotes = JSON.parse(localStorage.getItem('docmate_notes')) || [];
 let currentAudioNotes = JSON.parse(localStorage.getItem('docmate_audio_notes')) || [];
-let currentBook = null;
+let currentBook = null; 
 let currentPage = 0;
 let totalPages = 0;
 let isRecording = false;
@@ -1383,6 +1383,7 @@ setInterval(() => {
         localStorage.setItem('docmate_books', JSON.stringify(currentBooks));
     }
 }, 30000); // Save every 30 seconds
+
 
 
 
