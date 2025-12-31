@@ -1,4 +1,4 @@
-// DOCMATE - Smart Reading Platform
+ // DOCMATE - Smart Reading Platform
 // Main JavaScript functionality
 
 // Configure PDF.js worker
@@ -1383,5 +1383,6 @@ setInterval(() => {
         localStorage.setItem('docmate_books', JSON.stringify(currentBooks));
     }
 }, 30000); // Save every 30 seconds
+
 
 
