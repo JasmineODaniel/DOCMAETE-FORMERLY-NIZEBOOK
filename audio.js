@@ -4,7 +4,7 @@
 let currentUtterance = null;
 let isSpeaking = false; 
 let audioProgress = 0; 
-let audioTimeline = null;
+let audioTimeline = null; 
 let speechStartTime = 0;
 let estimatedDuration = 0;
  
@@ -427,6 +427,7 @@ window.audioManager = {
     getAvailableVoices,
     getVoicesForLanguage
 };
+
 
 
 
