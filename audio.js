@@ -7,7 +7,7 @@ let audioProgress = 0;
 let audioTimeline = null;
 let speechStartTime = 0;
 let estimatedDuration = 0;
-
+ 
 // Initialize audio controls
 function initializeAudioControls() {
     audioTimeline = document.getElementById('audioTimeline');
@@ -427,3 +427,4 @@ window.audioManager = {
     getAvailableVoices,
     getVoicesForLanguage
 };
+
