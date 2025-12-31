@@ -10,7 +10,7 @@ const API_CONFIG = {
     
     // Microsoft Azure
     AZURE_TRANSLATOR_KEY: 'YOUR_AZURE_TRANSLATOR_KEY',
-    AZURE_TRANSLATOR_REGION: 'YOUR_AZURE_REGION',
+    AZURE_TRANSLATOR_REGION: 'YOUR_AZURE_REGION', 
     
     // OpenAI (for enhanced analysis)
     OPENAI_API_KEY: 'YOUR_OPENAI_API_KEY',
@@ -639,4 +639,5 @@ window.apiUtils = {
     }
 
 };
+
 
