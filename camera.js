@@ -1,6 +1,6 @@
  // DOCMATE - Camera and OCR Management
 // Handles camera access, image capture, and OCR processing
-
+ 
 let cameraStream = null;
 let cameraVideo = null;
 let cameraCanvas = null;
@@ -492,5 +492,6 @@ window.cameraManager = {
     processBatchImages,
     displayCapturedImages
 };
+
 
 
