@@ -5,7 +5,7 @@
     /* Light Theme */
     --primary-bg: #FFFFFF;
     --secondary-bg: #F8FAFC;
-    --accent-color: #1E293B;
+    --accent-color: #1E293B; 
     --accent-hover: #334155;
     --text-primary: #1F2937; 
     --text-secondary: #6B7280;
@@ -1379,4 +1379,5 @@ textarea:focus {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--accent-color);
 }
+
 
