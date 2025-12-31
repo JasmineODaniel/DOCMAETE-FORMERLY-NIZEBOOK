@@ -2,7 +2,7 @@
 // Handles TTS, audio playback, and timeline controls
 
 let currentUtterance = null;
-let isSpeaking = false;
+let isSpeaking = false; 
 let audioProgress = 0; 
 let audioTimeline = null;
 let speechStartTime = 0;
@@ -427,5 +427,6 @@ window.audioManager = {
     getAvailableVoices,
     getVoicesForLanguage
 };
+
 
 
