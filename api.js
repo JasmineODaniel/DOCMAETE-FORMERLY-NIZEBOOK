@@ -2,7 +2,7 @@
 // Handles external API calls for translation, search, and other services
 
 // API Configuration
-const API_CONFIG = {
+const API_CONFIG = { 
     // Google APIs
     GOOGLE_TRANSLATE_API_KEY: 'YOUR_GOOGLE_TRANSLATE_API_KEY',
     GOOGLE_SEARCH_API_KEY: 'YOUR_GOOGLE_SEARCH_API_KEY', 
@@ -639,5 +639,6 @@ window.apiUtils = {
     }
 
 };
+
 
 
