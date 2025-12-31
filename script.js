@@ -5,7 +5,7 @@
 if (typeof pdfjsLib !== 'undefined') { 
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
 } 
-
+ 
 // Global state
 let currentBooks = JSON.parse(localStorage.getItem('docmate_books')) || [];
 let currentNotes = JSON.parse(localStorage.getItem('docmate_notes')) || [];
@@ -1383,6 +1383,7 @@ setInterval(() => {
         localStorage.setItem('docmate_books', JSON.stringify(currentBooks));
     }
 }, 30000); // Save every 30 seconds
+
 
 
 
