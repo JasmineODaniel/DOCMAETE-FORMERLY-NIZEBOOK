@@ -5,7 +5,7 @@ let cameraStream = null;
 let cameraVideo = null;
 let cameraCanvas = null;
 let capturedImages = []; 
-
+ 
 // Initialize camera functionality
 function initializeCamera() {
     cameraVideo = document.getElementById('cameraVideo');
@@ -492,6 +492,7 @@ window.cameraManager = {
     processBatchImages,
     displayCapturedImages
 };
+
 
 
 
