@@ -3,7 +3,7 @@
 
 // API Configuration
 const API_CONFIG = { 
-    // Google APIs
+    // Google APIs 
     GOOGLE_TRANSLATE_API_KEY: 'YOUR_GOOGLE_TRANSLATE_API_KEY',
     GOOGLE_SEARCH_API_KEY: 'YOUR_GOOGLE_SEARCH_API_KEY', 
     GOOGLE_SEARCH_ENGINE_ID: 'YOUR_SEARCH_ENGINE_ID',
@@ -639,6 +639,7 @@ window.apiUtils = {
     }
 
 };
+
 
 
 
