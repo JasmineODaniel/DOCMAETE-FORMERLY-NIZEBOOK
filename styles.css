@@ -1,4 +1,4 @@
-/* DOCMATE - Smart Reading Platform Styles */
+ /* DOCMATE - Smart Reading Platform Styles */
 
 /* CSS Variables for Theme Management */
 :root {
@@ -1379,6 +1379,7 @@ textarea:focus {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--accent-color);
 }
+
 
 
 
